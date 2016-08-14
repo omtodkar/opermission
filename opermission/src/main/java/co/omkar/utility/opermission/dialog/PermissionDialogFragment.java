@@ -28,7 +28,7 @@ import static android.view.View.OnClickListener;
 
 /**
  * Created by Omya on 10/08/16.
- * <p>
+ * <p/>
  * Permission Message dialog box. This Fragment is shown
  * with rationale messages just before permissions are asked.
  */
@@ -117,31 +117,30 @@ public class PermissionDialogFragment extends DialogFragment implements OnClickL
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.permission_dialog_layout, container, false);
-        viewPager = (ViewPager) view.findViewById(R.id.view_pager);
+        if (size > 0) {
+            viewPager = (ViewPager) view.findViewById(R.id.view_pager);
 
-        counter = (TextView) view.findViewById(R.id.count);
-        counter.setOnClickListener(this);
-        String count = 1 + "/" + size;
-        counter.setText(count);
+            counter = (TextView) view.findViewById(R.id.count);
+            counter.setOnClickListener(this);
+            String count = 1 + "/" + size;
+            counter.setText(count);
 
-        next = (ImageButton) view.findViewById(R.id.button_next);
-        next.setOnClickListener(this);
+            next = (ImageButton) view.findViewById(R.id.button_next);
+            next.setOnClickListener(this);
 
-        previous = (ImageButton) view.findViewById(R.id.button_prev);
-        previous.setOnClickListener(this);
+            previous = (ImageButton) view.findViewById(R.id.button_prev);
+            previous.setOnClickListener(this);
 
-        adapter = new PagerAdapter(getChildFragmentManager(), messages);
-        viewPager.setAdapter(adapter);
-        viewPager.addOnPageChangeListener(this);
-        return view;
-    }
-
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        if (messages.length < 1) {
-            requestPermissions(permissions, requestCode);
+            adapter = new PagerAdapter(getChildFragmentManager(), messages);
+            viewPager.setAdapter(adapter);
+            viewPager.addOnPageChangeListener(this);
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                getActivity().requestPermissions(permissions, requestCode);
+                dismissAllowingStateLoss();
+            }
         }
+        return view;
     }
 
     /**
@@ -184,6 +183,7 @@ public class PermissionDialogFragment extends DialogFragment implements OnClickL
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         RequestPermission.onResult(requestCode, permissions, grantResults);
+        dismissAllowingStateLoss();
     }
 
     @Override
