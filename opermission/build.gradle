@@ -6,9 +6,9 @@ ext {
 
     publishedGroupId = 'co.omkar.utility'
     libraryName = 'oPermissions'
-    artifact = 'opermissions'
+    artifact = 'oPermissions'
 
-    libraryDescription = 'A helper library for Android Runtime Permissions'
+    libraryDescription = 'Android utility library to ease in asking run-time permission for API over 23 i.e. Marshmallows.'
 
     siteUrl = 'http://omkar.co/repository/utility/opermissions'
     gitUrl = 'https://github.com/omtodkar/opermissions.git'
