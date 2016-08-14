@@ -24,7 +24,7 @@ import co.omkar.utility.opermission.dialog.PermissionDialogFragment;
 
 /**
  * Created by Omya on 12/08/16.
- * <p>
+ * <p/>
  * Request permission is builder class to
  * prepare a permission request.
  */
@@ -281,7 +281,7 @@ public final class RequestPermission {
             Method method = methods[k];
 
             /* Check if annotation is present on method. */
-            if (method.isAnnotationPresent(GrantedPermission.class)) {
+            if (method != null && method.isAnnotationPresent(GrantedPermission.class)) {
                 GrantedPermission granted = method.getAnnotation(GrantedPermission.class);
 
                 if (granted != null) {
@@ -342,7 +342,7 @@ public final class RequestPermission {
             Method method = methods[k];
 
             /* Check if annotation is present on method. */
-            if (method.isAnnotationPresent(DeniedPermission.class)) {
+            if (method != null && method.isAnnotationPresent(DeniedPermission.class)) {
                 DeniedPermission denied = method.getAnnotation(DeniedPermission.class);
 
                 if (denied != null) {
