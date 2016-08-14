@@ -2,18 +2,18 @@ apply plugin: 'com.android.library'
 
 ext {
     bintrayRepo = 'maven'
-    bintrayName = 'opermissions'
+    bintrayName = 'opermission'
 
     publishedGroupId = 'co.omkar.utility'
-    libraryName = 'oPermissions'
-    artifact = 'oPermissions'
+    libraryName = 'opermission'
+    artifact = 'opermission'
 
     libraryDescription = 'Android utility library to ease in asking run-time permission for API over 23 i.e. Marshmallows.'
 
-    siteUrl = 'http://omkar.co/repository/utility/opermissions'
+    siteUrl = 'https://github.com/omtodkar/opermissions'
     gitUrl = 'https://github.com/omtodkar/opermissions.git'
 
-    libraryVersion = '0.1.0'
+    libraryVersion = '0.0.1'
 
     developerId = 'omtodkar'
     developerName = 'Omkar Todkar'
@@ -32,7 +32,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 24
         versionCode 1
-        versionName "0.1.0"
+        versionName "0.0.1"
     }
     buildTypes {
         release {
