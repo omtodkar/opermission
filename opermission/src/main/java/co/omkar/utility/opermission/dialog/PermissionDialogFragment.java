@@ -28,7 +28,7 @@ import static android.view.View.OnClickListener;
 
 /**
  * Created by Omya on 10/08/16.
- * <p/>
+ * <p>
  * Permission Message dialog box. This Fragment is shown
  * with rationale messages just before permissions are asked.
  */

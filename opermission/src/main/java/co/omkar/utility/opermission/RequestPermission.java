@@ -24,7 +24,7 @@ import co.omkar.utility.opermission.dialog.PermissionDialogFragment;
 
 /**
  * Created by Omya on 12/08/16.
- * <p/>
+ * <p>
  * Request permission is builder class to
  * prepare a permission request.
  */
