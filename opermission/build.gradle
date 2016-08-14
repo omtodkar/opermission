@@ -1,5 +1,29 @@
 apply plugin: 'com.android.library'
 
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'opermissions'
+
+    publishedGroupId = 'co.omkar.utility'
+    libraryName = 'oPermissions'
+    artifact = 'opermissions'
+
+    libraryDescription = 'A helper library for Android Runtime Permissions'
+
+    siteUrl = 'http://omkar.co/repository/utility/opermissions'
+    gitUrl = 'https://github.com/omtodkar/opermissions.git'
+
+    libraryVersion = '0.1.0'
+
+    developerId = 'omtodkar'
+    developerName = 'Omkar Todkar'
+    developerEmail = 'omtodkar@gmail.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
+
 android {
     compileSdkVersion 24
     buildToolsVersion "24.0.1"
@@ -23,3 +47,6 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:24.1.1'
 }
+
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
