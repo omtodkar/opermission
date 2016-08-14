@@ -4,8 +4,9 @@ import android.support.annotation.NonNull;
 
 /**
  * Created by Omya on 12/08/16.
+ * <p>
+ * A wrapper class for Permission and its rational message.
  */
-// TODO: 12/08/16 documentation
 public class PermBean {
 
     /**

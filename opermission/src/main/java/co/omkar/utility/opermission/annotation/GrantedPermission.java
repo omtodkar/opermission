@@ -10,7 +10,7 @@ import co.omkar.utility.opermission.bean.Permission;
 
 /**
  * Created by Omya on 12/08/16.
- * <p/>
+ * <p>
  * Use this annotation on method where you can
  * write a logic on permission granted.
  */
@@ -28,7 +28,7 @@ public @interface GrantedPermission {
     /**
      * Array of {@link android.Manifest.permission} or {@link android.Manifest.permission_group}
      * which is requested through RequestPermission.
-     * <p/>
+     * <p>
      * Use it if some method depend on two or more permissions grant.
      */
     String[] permissions() default {};

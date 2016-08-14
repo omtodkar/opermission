@@ -2,7 +2,7 @@ package co.omkar.utility.opermission.bean;
 
 /**
  * Created by Omya on 12/08/16.
- * <p/>
+ * <p>
  * Dangerous permissions which requires
  * runtime permissions.
  */
