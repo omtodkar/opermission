@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -15,6 +14,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import co.omkar.utility.opermission.annotation.DeniedPermission;
 import co.omkar.utility.opermission.annotation.GrantedPermission;
@@ -23,10 +23,11 @@ import co.omkar.utility.opermission.bean.Permission;
 import co.omkar.utility.opermission.dialog.PermissionDialogFragment;
 
 /**
- * Created by Omya on 12/08/16.
- * <p/>
- * Request permission is builder class to
- * prepare a permission request.
+ * <p>Request permission is builder class to
+ * prepare a permission request.</p>
+ * Created on 12/08/16.
+ *
+ * @author Omkar Todkar
  */
 public final class RequestPermission {
     private static final String TAG = "RequestPermission";
@@ -54,13 +55,6 @@ public final class RequestPermission {
     private static FragmentActivity mActivity;
 
     /**
-     * {@link Class} where annotated methods
-     * {@link GrantedPermission} or {@link DeniedPermission}
-     * are declared.
-     */
-    private static Class clazz;
-
-    /**
      * A wrapper class with bundle of permissions
      * and respective messages.
      */
@@ -79,7 +73,6 @@ public final class RequestPermission {
      */
     private RequestPermission(FragmentActivity mActivity) {
         RequestPermission.mActivity = mActivity;
-        RequestPermission.clazz = mActivity.getClass();
     }
 
     /**
@@ -118,58 +111,32 @@ public final class RequestPermission {
      * permissions to be asked and respective messages to be shown.
      */
     public RequestPermission with(PermBean permBean) {
+        if (permBean.getPermissions().isEmpty()) {
+            throw new NullPointerException("Permission and Message collection cannot be null !");
+        }
         RequestPermission.permBean = permBean;
         return this;
     }
 
     /**
-     * Set Presenter / Other class where
-     * {@link GrantedPermission} or {@link DeniedPermission}
-     * annotated methods are declared.
-     *
-     * @param clazz Class where annotated methods are set.
-     * @return prepared object of {@link RequestPermission}.
-     */
-    public RequestPermission setClass(Class clazz) {
-        if (clazz != null) {
-            RequestPermission.clazz = clazz;
-        } else {
-            RequestPermission.clazz = RequestPermission.mActivity.getClass();
-        }
-        return this;
-    }
-
-    /**
-     * Execute request for all provided permissions.
-     * Only if only API > 23.
+     * <p>Execute request for all provided permissions. It checks if permissions
+     * are already granted or required to grant.</p>
+     * <p>Only if only API is greater than 23 (i.e. Marshmallows or later).</p>
      */
     public void request() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
-
-        String[] permissions = permBean.getPermission();
-        String[] messages = permBean.getRationaleMessage();
-
-        if (permissions != null) {
-            int count = permissions.length;
-            List<String> temPerm = new ArrayList<>();
-            List<String> tempMsg = new ArrayList<>();
-
-            for (int k = 0; k < count; k++) {
-
-                int status = ContextCompat.checkSelfPermission(mActivity, permissions[k]);
-
-                if (status != PackageManager.PERMISSION_GRANTED) {
-                    temPerm.add(permissions[k]);
-
-                    if (messages != null) {
-                        tempMsg.add(messages[k]);
-                    }
-                }
+        PermBean bean = new PermBean();
+        Map<Permission, String> map = permBean.getPermissions();
+        for (Map.Entry<Permission, String> m : map.entrySet()) {
+            if (mActivity.checkSelfPermission(m.getKey().toString()) != PackageManager.PERMISSION_GRANTED) {
+                bean.put(m.getKey(), m.getValue());
             }
-
-            // pass everything to dialog fragment.
-            showDialog(new PermBean(temPerm.toArray(new String[temPerm.size()]),
-                    tempMsg.toArray(new String[tempMsg.size()])));
+        }
+        // pass everything to dialog fragment.
+        if (bean.size() > 0) {
+            showDialog(bean);
+        } else {
+            Log.i(TAG, "request: Redundant");
         }
     }
 
@@ -181,18 +148,15 @@ public final class RequestPermission {
      * @return boolean value if any one of permission requires to be asked.
      */
     public static boolean isPermissionRequired(@NonNull Context mContext, @NonNull PermBean permBean) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false;
-        String[] permissions = permBean.getPermission();
-        int count = permissions.length;
-        int status;
-        if (count > 1) {
-            for (int k = 0; k < count; k++) {
-                status = ContextCompat.checkSelfPermission(mContext, permissions[k]);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return false;
+        }
+        if (permBean.size() > 0) {
+            Map<Permission, String> map = permBean.getPermissions();
+            for (Permission permission : map.keySet()) {
+                int status = mContext.checkSelfPermission(permission.toString());
                 if (status != PackageManager.PERMISSION_GRANTED) return true;
             }
-        } else {
-            status = ContextCompat.checkSelfPermission(mContext, permissions[0]);
-            if (status != PackageManager.PERMISSION_GRANTED) return true;
         }
         return false;
     }
@@ -270,8 +234,7 @@ public final class RequestPermission {
      */
     private static void invokeGrantMethods(String[] grantedPermissions) throws IllegalAccessException,
             InstantiationException, InvocationTargetException {
-        Method[] methods = RequestPermission.clazz.getMethods();
-        Object obj = RequestPermission.clazz.newInstance();
+        Method[] methods = mActivity.getClass().getMethods();
         int permCount = grantedPermissions.length;
         int methodCount = methods.length;
 
@@ -291,21 +254,21 @@ public final class RequestPermission {
                         // invoke method if String permission is annotated.
                         if (!granted.permission().equals("")
                                 && permission.equals(granted.permission())) {
-                            method.invoke(obj);
+                            method.invoke(mActivity);
                             continue;
                         }
 
                         // invoke method if Permission enum is annotated.
                         if (granted.value() != Permission.NULL
                                 && permission.equals(granted.permission())) {
-                            method.invoke(obj);
+                            method.invoke(mActivity);
                         }
                     }
 
                     // invoke method if permission's String array is annotated.
                     if (granted.permissions() != null) {
                         if (isPermissionsValid(granted.permissions(), grantedPermissions)) {
-                            method.invoke(obj);
+                            method.invoke(mActivity);
                         }
                         continue;
                     }
@@ -313,7 +276,7 @@ public final class RequestPermission {
                     // invoke method if Permission enum array is annotated.
                     if (granted.values() != null) {
                         if (isValueValid(granted.values(), grantedPermissions)) {
-                            method.invoke(obj);
+                            method.invoke(mActivity);
                         }
                     }
                 }
@@ -331,8 +294,7 @@ public final class RequestPermission {
      */
     private static void invokeDeniedMethods(String[] deniedPermission) throws IllegalAccessException,
             InstantiationException, InvocationTargetException {
-        Method[] methods = RequestPermission.clazz.getMethods();
-        Object obj = RequestPermission.clazz.newInstance();
+        Method[] methods = mActivity.getClass().getMethods();
         int permCount = deniedPermission.length;
         int methodCount = methods.length;
 
@@ -352,34 +314,32 @@ public final class RequestPermission {
                         // invoke method if String permission is annotated.
                         if (!denied.permission().equals("")
                                 && permission.equals(denied.permission())) {
-                            method.invoke(obj);
+                            method.invoke(mActivity);
                             continue;
                         }
 
                         // invoke method if Permission enum is annotated.
                         if (denied.value() != Permission.NULL
                                 && permission.equals(denied.permission())) {
-                            method.invoke(obj);
+                            method.invoke(mActivity);
                         }
                     }
 
                     // invoke method if permission's String array is annotated.
                     if (denied.permissions() != null) {
-                        if (isPermissionsValid(denied.permissions(), deniedPermission)) {
-                            method.invoke(obj);
+                        if (!isPermissionsValid(denied.permissions(), deniedPermission)) {
+                            method.invoke(mActivity);
                         }
                         continue;
                     }
 
                     // invoke method if Permission enum array is annotated.
                     if (denied.values() != null) {
-                        if (isValueValid(denied.values(), deniedPermission)) {
-                            method.invoke(obj);
+                        if (!isValueValid(denied.values(), deniedPermission)) {
+                            method.invoke(mActivity);
                         }
                     }
                 }
-            } else {
-                Log.e(TAG, "invokeDeniedMethods: No methods found !");
             }
         }
     }

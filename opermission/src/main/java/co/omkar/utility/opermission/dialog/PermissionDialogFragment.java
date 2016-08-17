@@ -16,25 +16,28 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import co.omkar.utility.opermission.R;
 import co.omkar.utility.opermission.RequestPermission;
 import co.omkar.utility.opermission.bean.PermBean;
+import co.omkar.utility.opermission.bean.Permission;
 
 import static android.view.View.OnClickListener;
 
 
 /**
- * Created by Omya on 10/08/16.
- * <p/>
- * Permission Message dialog box. This Fragment is shown
- * with rationale messages just before permissions are asked.
+ * <p>Permission Message dialog box. This Fragment is shown
+ * with rationale messages just before permissions are asked.</p>
+ * Created on 10/08/16.
+ *
+ * @author Omkar Todkar
  */
 public class PermissionDialogFragment extends DialogFragment implements OnClickListener, OnPageChangeListener {
     private static final String TAG = "PermissionDialog";
-    private static final String MESSAGE = "message";
+
     private static final String PERMISSION = "permission";
     private static final String REQUEST = "request";
 
@@ -47,6 +50,8 @@ public class PermissionDialogFragment extends DialogFragment implements OnClickL
     ImageButton previous;
 
     PagerAdapter adapter;
+
+    private HashMap<Permission, String> mBean;
 
     private String[] messages;
     private String[] permissions;
@@ -68,9 +73,15 @@ public class PermissionDialogFragment extends DialogFragment implements OnClickL
     public static PermissionDialogFragment getInstance(PermBean bean, int requestCode) {
         if (bean == null) throw new NullPointerException("Permission Beans cannot be null !");
         Bundle extras = new Bundle(3);
-        extras.putStringArray(MESSAGE, bean.getRationaleMessage());
-        extras.putStringArray(PERMISSION, bean.getPermission());
+
+        // convert map to two arrays.
+        HashMap<Permission, String> map = (HashMap<Permission, String>) bean.getPermissions();
+
+        // put arrays in extras.
+        extras.putSerializable(PERMISSION, map);
         extras.putInt(REQUEST, requestCode);
+
+        // set extras in fragment and return.
         PermissionDialogFragment fragment = new PermissionDialogFragment();
         fragment.setArguments(extras);
         return fragment;
@@ -79,36 +90,24 @@ public class PermissionDialogFragment extends DialogFragment implements OnClickL
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         Bundle extras = getArguments();
-
         if (extras != null) {
-            String[] msgs = extras.getStringArray(MESSAGE);
+            //noinspection unchecked
+            mBean = (HashMap<Permission, String>) extras.getSerializable(PERMISSION);
 
-            /* Process to avoid duplicity of default messages. */
-            if (msgs != null) {
-                int count = msgs.length;    // calculate size.
+            if (mBean != null && !mBean.isEmpty()) {
+                /* To avoid duplicity of provided messages. */
+                Set<String> msgs = new LinkedHashSet<String>();
+                msgs.addAll(mBean.values());
+                messages = msgs.toArray(new String[msgs.size()]);
 
-                if (count > 1) {
-                    List<String> temp = new ArrayList<>();
-
-                    for (int k = 0; k < count; k++) {
-                        if (k == 0) {       // add first message as it is.
-                            temp.add(msgs[k]);
-                        } else if (k > 0    // check on second message if it is similar to first one.
-                                && !msgs[k].equals(msgs[k - 1])) {
-                            temp.add(msgs[k]);
-                        }
-                    }
-
-                    messages = temp.toArray(new String[temp.size()]);
-                } else {
-
-                    messages = msgs;
+                /* extract permissions value from enum */
+                Set<String> perm = new LinkedHashSet<String>();
+                for (Permission p : mBean.keySet()) {
+                    perm.add(p.toString());
                 }
+                permissions = perm.toArray(new String[perm.size()]);
             }
-
-            permissions = extras.getStringArray(PERMISSION);
             requestCode = extras.getInt(REQUEST);
             size = messages.length;
         }
@@ -117,29 +116,34 @@ public class PermissionDialogFragment extends DialogFragment implements OnClickL
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.permission_dialog_layout, container, false);
-        if (size > 0) {
-            viewPager = (ViewPager) view.findViewById(R.id.view_pager);
+        viewPager = (ViewPager) view.findViewById(R.id.view_pager);
 
-            counter = (TextView) view.findViewById(R.id.count);
-            counter.setOnClickListener(this);
+        counter = (TextView) view.findViewById(R.id.count);
+        counter.setOnClickListener(this);
+
+        next = (ImageButton) view.findViewById(R.id.button_next);
+        next.setOnClickListener(this);
+
+        previous = (ImageButton) view.findViewById(R.id.button_prev);
+        previous.setOnClickListener(this);
+
+        if (size > 0) {
             String count = 1 + "/" + size;
             counter.setText(count);
+        } else if (size == 0) {
+            next.setVisibility(View.INVISIBLE);
+            previous.setVisibility(View.INVISIBLE);
 
-            next = (ImageButton) view.findViewById(R.id.button_next);
-            next.setOnClickListener(this);
+            size = 1;
+            messages = new String[size];
+            messages[0] = "Please allow permissions to access full features of application.";
 
-            previous = (ImageButton) view.findViewById(R.id.button_prev);
-            previous.setOnClickListener(this);
-
-            adapter = new PagerAdapter(getChildFragmentManager(), messages);
-            viewPager.setAdapter(adapter);
-            viewPager.addOnPageChangeListener(this);
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                getActivity().requestPermissions(permissions, requestCode);
-                dismissAllowingStateLoss();
-            }
+            counter.setText(getString(R.string.ok));
+            counter.setTextColor(Color.parseColor("#018c7a"));
         }
+        adapter = new PagerAdapter(getChildFragmentManager(), messages);
+        viewPager.setAdapter(adapter);
+        viewPager.addOnPageChangeListener(this);
         return view;
     }
 

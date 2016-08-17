@@ -2,7 +2,7 @@ package co.omkar.utility.opermission.bean;
 
 /**
  * Created by Omya on 12/08/16.
- * <p>
+ * <p/>
  * Dangerous permissions which requires
  * runtime permissions.
  */
@@ -50,24 +50,7 @@ public enum Permission {
 
     // storage
     READ_EXTERNAL_STORAGE("android.permission.READ_EXTERNAL_STORAGE"),
-    WRITE_EXTERNAL_STORAGE("android.permission.WRITE_EXTERNAL_STORAGE"),
-
-    /* Permission Groups */
-    CALENDAR("android.permission-group.CALENDAR"),
-
-    CONTACTS("android.permission-group.CONTACTS"),
-
-    LOCATION("android.permission-group.LOCATION"),
-
-    MICROPHONE("android.permission-group.MICROPHONE"),
-
-    PHONE("android.permission-group.PHONE"),
-
-    SENSORS("android.permission-group.SENSORS"),
-
-    SMS("android.permission-group.SMS"),
-
-    STORAGE("android.permission-group.STORAGE");
+    WRITE_EXTERNAL_STORAGE("android.permission.WRITE_EXTERNAL_STORAGE");
 
     private final String name;
 
