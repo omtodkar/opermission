@@ -2,110 +2,90 @@ package co.omkar.utility.opermission.bean;
 
 import android.support.annotation.NonNull;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * Created by Omya on 12/08/16.
- * <p>
- * A wrapper class for Permission and its rational message.
+ * <p>A wrapper class for Permission and its rational message.</p>
+ * Created on 12/08/16.
+ *
+ * @author Omkar Todkar.
+ * @see Permission
+ * @see co.omkar.utility.opermission.RequestPermission
+ * @see android.Manifest.permission
  */
 public class PermBean {
 
     /**
-     * Android Dangerous Permissions to be asked.
+     * Permission Map with corresponding message.
+     */
+    private Map<Permission, String> mPermissions;
+
+    /**
+     * Create a permission bean for single permission without message to show.
+     * Note: Only default message will be shown on launch.
      *
-     * @see android.Manifest.permission
+     * @param permission {@link android.Manifest.permission} to be asked.
      */
-    private String[] permission;
-
-    /**
-     * Rationale messages to be shown on denied of at first with permissions.
-     */
-    private String[] rationaleMessage;
-
-    /**
-     * Rationale message must be shown from very first prompt.
-     */
-    private boolean showMessage;
-
     public PermBean(@NonNull String permission) {
-        this.permission = new String[]{permission};
-        this.rationaleMessage = null;
-        this.showMessage = false;
+        this.mPermissions = new HashMap<>(1);
+        mPermissions.put(Permission.get(permission), null);
     }
 
-    // TODO: 12/08/16 distinguish between permissions.
-    public PermBean(@NonNull String[] permission) {
-        this.permission = permission;
-        this.rationaleMessage = null;
-        this.showMessage = false;
+    /**
+     * Set a permission and messages map.
+     *
+     * @param mPermissions A prepared Map&lt;Permission, String&gt; to be asked.
+     */
+    public PermBean(Map<Permission, String> mPermissions) {
+        this.mPermissions = mPermissions;
     }
 
-    public PermBean(@NonNull Permission[] permission) {
-        int count = permission.length;
-        this.permission = new String[count];
-        for (int k = 0; k < count; k++) {
-            this.permission[k] = permission[k].toString();
+    /**
+     * Initialize empty permission map and add permission later.
+     */
+    public PermBean() {
+        mPermissions = new HashMap<>();
+    }
+
+    /**
+     * Add permission and message one by one.
+     *
+     * @param permission {@link Permission} to be asked.
+     * @param message    String rationale message.
+     */
+    public void put(Permission permission, String message) {
+        if (permission == null) throw new IllegalArgumentException("Permission can't be null");
+        mPermissions.put(permission, message);
+    }
+
+    /**
+     * Permission to be removed from map.
+     *
+     * @param permission {@link Permission} to be removed.
+     */
+    public void remove(Permission permission) {
+        if (permission == null) {
+            throw new IllegalArgumentException("Cannot remove null permission out of bean.");
         }
+        mPermissions.remove(permission);
     }
 
-    public PermBean(@NonNull String[] permission, String[] rationaleMessage) {
-        this.permission = permission;
-        this.rationaleMessage = rationaleMessage;
-        this.showMessage = rationaleMessage != null;
+    /**
+     * Size of bean containing map.
+     *
+     * @return size of map in {@link Integer} value.
+     */
+    public int size() {
+        return mPermissions != null ? mPermissions.size() : 0;
     }
 
-    public PermBean(@NonNull String permission, String rationaleMessage) {
-        this.permission = new String[]{permission};
-        this.rationaleMessage = new String[]{rationaleMessage};
-        this.showMessage = rationaleMessage != null;
-    }
-
-    public PermBean(@NonNull Permission permission, String rationaleMessage) {
-        this.permission = new String[]{permission.toString()};
-        this.rationaleMessage = new String[]{rationaleMessage};
-        this.showMessage = rationaleMessage != null;
-    }
-
-    public PermBean(@NonNull Permission[] permission, String[] rationaleMessage) {
-        int count = permission.length;
-        this.rationaleMessage = rationaleMessage;
-        this.showMessage = rationaleMessage != null;
-        this.permission = new String[count];
-        for (int k = 0; k < count; k++) {
-            this.permission[k] = permission[k].toString();
-        }
-    }
-
-    public PermBean(@NonNull Permission[] permission, String rationaleMessage) {
-        int count = permission.length;
-        this.rationaleMessage = new String[]{rationaleMessage};
-        this.showMessage = rationaleMessage != null;
-        this.permission = new String[count];
-        for (int k = 0; k < count; k++) {
-            this.permission[k] = permission[k].toString();
-        }
-    }
-
-    public String[] getPermission() {
-        return permission;
-    }
-
-    public void setPermission(@NonNull String[] permission) {
-        this.permission = permission;
-    }
-
-    public String[] getRationaleMessage() {
-        return rationaleMessage;
-    }
-
-    public void setRationaleMessage(String[] rationaleMessage) {
-        this.rationaleMessage = rationaleMessage;
-    }
-
-    public boolean isShowMessage() {
-        return showMessage;
-    }
-
-    public void setShowMessage(boolean showMessage) {
-        this.showMessage = showMessage;
+    /**
+     * Get A prepared Map&lt;Permission, String&gt; to be asked.
+     *
+     * @return Map&lt;Permission, String&gt;
+     */
+    public Map<Permission, String> getPermissions() {
+        return mPermissions;
     }
 }
