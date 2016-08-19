@@ -19,24 +19,27 @@ public @interface DeniedPermission {
 
     /**
      * {@link android.Manifest.permission} or {@link android.Manifest.permission_group}
-     * which is requested through RequestPermission.
+     * which is requested through RequestPermission. Default value empty {@link String}.
      */
     String permission() default "";
 
     /**
      * Array of {@link android.Manifest.permission} or {@link android.Manifest.permission_group}
-     * which is requested through RequestPermission.
+     * which is requested through RequestPermission. Default NULL.
      * <p>
-     * Use it if any method depend on two or more permissions denial.
+     * Use it if some method depend on two or more permissions grant.
      */
     String[] permissions() default {};
 
     /**
      * {@link Permission} value.
+     * default NULL
      */
     Permission value() default Permission.NULL;
+
     /**
      * Array of {@link Permission}.
+     * Default NULL
      */
     Permission[] values() default {};
 }

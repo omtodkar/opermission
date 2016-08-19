@@ -1,5 +1,8 @@
 package co.omkar.utility.opermission.bean;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by Omya on 12/08/16.
  * <p/>
@@ -56,6 +59,18 @@ public enum Permission {
 
     Permission(String name) {
         this.name = name;
+    }
+
+    private static Map<String, Permission> mPermissions = new HashMap<>();
+
+    static {
+        for (Permission permission : Permission.values()) {
+            mPermissions.put(permission.toString(), permission);
+        }
+    }
+
+    public static Permission get(String permission) {
+        return mPermissions.get(permission);
     }
 
     @Override

@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.HashMap;
@@ -24,6 +25,7 @@ import co.omkar.utility.opermission.R;
 import co.omkar.utility.opermission.RequestPermission;
 import co.omkar.utility.opermission.bean.PermBean;
 import co.omkar.utility.opermission.bean.Permission;
+import co.omkar.utility.opermission.utility.mLog;
 
 import static android.view.View.OnClickListener;
 
@@ -36,10 +38,12 @@ import static android.view.View.OnClickListener;
  * @author Omkar Todkar
  */
 public class PermissionDialogFragment extends DialogFragment implements OnClickListener, OnPageChangeListener {
-    private static final String TAG = "PermissionDialog";
+    private static final String TAG = "RequestPermission";
 
     private static final String PERMISSION = "permission";
     private static final String REQUEST = "request";
+
+    LinearLayout dialogView;
 
     ViewPager viewPager;
 
@@ -110,12 +114,14 @@ public class PermissionDialogFragment extends DialogFragment implements OnClickL
             }
             requestCode = extras.getInt(REQUEST);
             size = messages.length;
+            mLog.i(TAG, "Dialog: rationale message size is " + size);
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.permission_dialog_layout, container, false);
+        dialogView = (LinearLayout) view.findViewById(R.id.dialog_view);
         viewPager = (ViewPager) view.findViewById(R.id.view_pager);
 
         counter = (TextView) view.findViewById(R.id.count);
@@ -128,15 +134,26 @@ public class PermissionDialogFragment extends DialogFragment implements OnClickL
         previous.setOnClickListener(this);
 
         if (size > 0) {
-            String count = 1 + "/" + size;
-            counter.setText(count);
+            if (size == 1) {
+                next.setVisibility(View.INVISIBLE);
+                previous.setVisibility(View.INVISIBLE);
+                counter.setText(getString(R.string.ok));
+                counter.setTextColor(Color.parseColor("#018c7a"));
+
+                if (messages[0] == null) {
+                    messages[0] = "Please allow permissions to enjoy all features of application.";
+                }
+            } else {
+                String count = 1 + "/" + size;
+                counter.setText(count);
+            }
         } else if (size == 0) {
             next.setVisibility(View.INVISIBLE);
             previous.setVisibility(View.INVISIBLE);
 
             size = 1;
             messages = new String[size];
-            messages[0] = "Please allow permissions to access full features of application.";
+            messages[0] = "Please allow permissions to enjoy all features of application.";
 
             counter.setText(getString(R.string.ok));
             counter.setTextColor(Color.parseColor("#018c7a"));
@@ -177,6 +194,7 @@ public class PermissionDialogFragment extends DialogFragment implements OnClickL
         } else if (id == R.id.count) {
             if ((position + 1) == size) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    dialogView.setVisibility(View.GONE);
                     requestPermissions(permissions, requestCode);
                 }
             }

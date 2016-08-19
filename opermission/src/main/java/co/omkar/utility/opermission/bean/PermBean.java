@@ -29,7 +29,7 @@ public class PermBean {
      */
     public PermBean(@NonNull String permission) {
         this.mPermissions = new HashMap<>(1);
-        mPermissions.put(Permission.valueOf(permission), null);
+        mPermissions.put(Permission.get(permission), null);
     }
 
     /**
