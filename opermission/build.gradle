@@ -13,7 +13,7 @@ ext {
     siteUrl = 'https://github.com/omtodkar/opermissions'
     gitUrl = 'https://github.com/omtodkar/opermissions.git'
 
-    libraryVersion = '0.0.1'
+    libraryVersion = '0.0.2'
 
     developerId = 'omtodkar'
     developerName = 'Omkar Todkar'
@@ -32,7 +32,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 24
         versionCode 1
-        versionName "0.0.1"
+        versionName "0.0.2"
     }
     buildTypes {
         release {
