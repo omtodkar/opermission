@@ -59,6 +59,11 @@ public final class RequestPermission {
     private static FragmentActivity mActivity;
 
     /**
+     * An Object where annotation classes are declared.
+     */
+    private static Object mBase;
+
+    /**
      * A wrapper class with bundle of permissions
      * and respective messages.
      */
@@ -123,8 +128,27 @@ public final class RequestPermission {
         return this;
     }
 
+    /**
+     * Turn off oPermission logs while requesting permissions.
+     *
+     * @param mode boolean value.
+     * @return modified instance of RequestPermission with debug ON/OFF.
+     */
     public RequestPermission debug(boolean mode) {
         mLog.setDebugMode(mode);
+        return this;
+    }
+
+    /**
+     * Set a initialized class where you declared result annotated methods.
+     * Example - instance of Presenter, ViewModel, etc.
+     *
+     * @param obj instance of Class containing {@link GrantedPermission}
+     *            / {@link DeniedPermission} methods.
+     * @return Modified instance of RequestPermission.
+     */
+    public RequestPermission setResultTarget(Object obj) {
+        RequestPermission.mBase = obj;
         return this;
     }
 
@@ -135,6 +159,12 @@ public final class RequestPermission {
      */
     public void request() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            // if result target is not set use activity as default.
+            if (RequestPermission.mBase == null) {
+                RequestPermission.mBase = mActivity;
+            }
+
             PermBean bean = new PermBean();
             Map<Permission, String> map = permBean.getPermissions();
             for (Map.Entry<Permission, String> m : map.entrySet()) {
@@ -246,7 +276,7 @@ public final class RequestPermission {
      */
     private static void invokeAnnotatedMethods(HashMap<Permission, Result> resultMap)
             throws InvocationTargetException, IllegalAccessException {
-        Method[] methods = mActivity.getClass().getMethods();
+        Method[] methods = getBase().getClass().getMethods();
 
         // check all methods from provided class or by default provided activity.
         for (Method method : methods) {
@@ -262,7 +292,7 @@ public final class RequestPermission {
                         // invoke method if String permission is annotated.
                         if (granted.permission().equals(permResult.getKey().toString())
                                 && Result.GRANTED == permResult.getValue()) {
-                            method.invoke(mActivity);
+                            method.invoke(getBase());
                             mLog.i(TAG, "invoking string annotated grant method: " + method.getName());
                             continue;
                         }
@@ -270,7 +300,7 @@ public final class RequestPermission {
                         // invoke method if Permission enum is annotated.
                         if (granted.value() == permResult.getKey()
                                 && Result.GRANTED == permResult.getValue()) {
-                            method.invoke(mActivity);
+                            method.invoke(getBase());
                             mLog.i(TAG, "invoking enum annotated grant method: " + method.getName());
                         }
                     }
@@ -279,14 +309,14 @@ public final class RequestPermission {
 
                     if (granted.values().length > 0) {
                         if (allValuesGranted(granted.values(), resultMap)) {
-                            method.invoke(mActivity);
+                            method.invoke(getBase());
                         }
                         continue;
                     }
 
                     if (granted.permissions().length > 0) {
                         if (allValuesGranted(granted.permissions(), resultMap)) {
-                            method.invoke(mActivity);
+                            method.invoke(getBase());
                         }
                     }
                 }
@@ -302,7 +332,7 @@ public final class RequestPermission {
                         // invoke method if String permission is annotated.
                         if (denied.permission().equals(permResult.getKey().toString())
                                 && Result.DENIED == permResult.getValue()) {
-                            method.invoke(mActivity);
+                            method.invoke(getBase());
                             mLog.i(TAG, "invoking string annotated denied method: " + method.getName());
                             continue;
                         }
@@ -310,7 +340,7 @@ public final class RequestPermission {
                         // invoke method if Permission enum is annotated.
                         if (denied.value() == permResult.getKey()
                                 && Result.DENIED == permResult.getValue()) {
-                            method.invoke(mActivity);
+                            method.invoke(getBase());
                             mLog.i(TAG, "invoking enum annotated denied method: " + method.getName());
                         }
                     }
@@ -319,7 +349,7 @@ public final class RequestPermission {
 
                     if (denied.values().length > 0) {
                         if (anyValueDenied(denied.values(), resultMap)) {
-                            method.invoke(mActivity);
+                            method.invoke(getBase());
                             mLog.i(TAG, "invoking string annotated denied method: " + method.getName());
                         }
                         continue;
@@ -328,7 +358,7 @@ public final class RequestPermission {
                     if (denied.permissions().length > 0) {
                         if (anyValueDenied(denied.permissions(), resultMap)) {
                             mLog.i(TAG, "invoking enum annotated denied method: " + method.getName());
-                            method.invoke(mActivity);
+                            method.invoke(getBase());
                         }
                     }
                 }
@@ -429,5 +459,9 @@ public final class RequestPermission {
             }
         }
         return false;
+    }
+
+    private static Object getBase() {
+        return RequestPermission.mBase;
     }
 }

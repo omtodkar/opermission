@@ -1,6 +1,5 @@
 package co.omkar.utility;
 
-import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -14,8 +13,6 @@ import android.widget.TextView;
 import java.util.Arrays;
 
 import co.omkar.utility.opermission.RequestPermission;
-import co.omkar.utility.opermission.annotation.DeniedPermission;
-import co.omkar.utility.opermission.annotation.GrantedPermission;
 import co.omkar.utility.opermission.bean.PermBean;
 import co.omkar.utility.opermission.bean.Permission;
 
@@ -24,7 +21,7 @@ import co.omkar.utility.opermission.bean.Permission;
  *
  * @author Omkar Todkar.
  */
-public class Example extends AppCompatActivity {
+public class Example extends AppCompatActivity implements ExampleView {
     private static final String TAG = "Example";
 
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -50,6 +47,9 @@ public class Example extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_example);
         message = (TextView) findViewById(R.id.text);
+        message.setText("Asking permission...");
+
+        Presenter mPresenter = new Presenter(this);
 
         /* Multiple permission example. */
         PermBean permBean = new PermBean();
@@ -62,10 +62,8 @@ public class Example extends AppCompatActivity {
 
         // prepare permission request.
         if (RequestPermission.isPermissionRequired(this, permBean)) {
-            RequestPermission.on(this).with(permBean).request();
+            RequestPermission.on(this).with(permBean).setResultTarget(mPresenter).request();
         }
-
-        message.setText("Asking permission...");
     }
 
     @Override
@@ -81,33 +79,8 @@ public class Example extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
     }
 
-    @GrantedPermission(permission = Manifest.permission.READ_PHONE_STATE)
-    void onReadPhonePermissionGranted() {
-        message.append("\n Read Phone status Granted");
-    }
-
-    @DeniedPermission(permission = Manifest.permission.READ_PHONE_STATE)
-    void onReadPhonePermissionDenied() {
-        message.append("\n Read Phone status Denied");
-    }
-
-    @GrantedPermission(values = {Permission.ACCESS_FINE_LOCATION, Permission.ACCESS_COARSE_LOCATION})
-    void onLocationPermissionGranted() {
-        message.append("\n Location status Granted");
-    }
-
-    @DeniedPermission(permissions = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION})
-    void onLocationPermissionDenied() {
-        message.append("\n Location status Denied");
-    }
-
-    @GrantedPermission(value = Permission.WRITE_EXTERNAL_STORAGE)
-    void onWriteStorageGranted() {
-        message.append("\n Write Storage Granted");
-    }
-
-    @DeniedPermission(value = Permission.WRITE_EXTERNAL_STORAGE)
-    void onWriteStorageDenied() {
-        message.append("\n Write Storage Denied");
+    @Override
+    public void UpdateView(String data) {
+        message.append(data);
     }
 }
