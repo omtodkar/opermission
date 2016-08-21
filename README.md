@@ -129,7 +129,7 @@ Do not forget to register local receiver.
 Just add below gradle dependency.
 
     dependencies {
-        compile 'co.omkar.utility:opermission:0.0.2'        
+        compile 'co.omkar.utility:opermission:0.0.3'        
     }
     
 Example Activity to implement request.
