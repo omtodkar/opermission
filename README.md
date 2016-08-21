@@ -28,44 +28,11 @@ Then build a request using `RequestPermission`.
     // build oPermission request.
     if (RequestPermission.isPermissionRequired(MainActivity.this, permBean)) {
         RequestPermission
-            .on(MainActivity.this)
-            .with(permBean)
-            .request();
+                .on(MainActivity.this)
+                .with(permBean)
+                .request();
     } else {
         // call your granted methods.
-    }
-    
-Example Activity to implement request.
-
-    public class Example extends AppCompatActivity {
-    
-        @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            setContentView(R.layout.activity_example);
-            
-            /* Multiple permission example. */
-            PermBean permBean = new PermBean();
-            
-            permBean.put(Permission.READ_PHONE_STATE, "Your rationale message to be shown for READ_PHONE_STATE");
-            
-            // usually keep both message same as android ask for Location group permission.
-            permBean.put(Permission.ACCESS_FINE_LOCATION, "Your rationale message to be shown for LOCATION");     
-            permBean.put(Permission.ACCESS_COARSE_LOCATION, "Your rationale message to be shown for LOCATION");
-            
-            permBean.put(Permission.WRITE_EXTERNAL_STORAGE, "Your rationale message to be shown for WRITE_EXTERNAL_STORAGE");
-    
-            // prepare permission request.
-            if (RequestPermission.isPermissionRequired(this, permBean)) {
-                RequestPermission
-                        .on(this)
-                        .with(permBean)
-                        .debug(false)       // optional
-                        .request();
-            } else {
-                // call your granted methods.
-            }
-        }
     }
     
 You can get results in two ways,
@@ -102,6 +69,21 @@ You can get results in two ways,
     @DeniedPermission(value = Permission.WRITE_EXTERNAL_STORAGE)
     void onWriteStorageDenied() {
         // Write Storage Denied do something to prevent...
+    }
+    
+In case you are using some architectural patterns such as MVP, MVVM, etc.
+
+    // prepare permission request.
+    if (RequestPermission.isPermissionRequired(this, permBean)) {
+        RequestPermission
+                .on(this)
+                .with(permBean)
+                .debug(false)       // optional
+                // set your class instance where annotated methods are declared.
+                .setResultTarget(mPresenter)
+                .request();
+    } else {
+        // call your granted methods.
     }
     
 *Results via Local Broadcast Receiver*
@@ -147,5 +129,38 @@ Do not forget to register local receiver.
 Just add below gradle dependency.
 
     dependencies {
-        compile 'co.omkar.utility:opermission:0.0.2'        
-    } 
+        compile 'co.omkar.utility:opermission:0.0.3'        
+    }
+    
+Example Activity to implement request.
+
+    public class Example extends AppCompatActivity {
+    
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_example);
+            
+            /* Multiple permission example. */
+            PermBean permBean = new PermBean();
+            
+            permBean.put(Permission.READ_PHONE_STATE, "Your rationale message to be shown for READ_PHONE_STATE");
+            
+            // usually keep both message same as android ask for Location group permission.
+            permBean.put(Permission.ACCESS_FINE_LOCATION, "Your rationale message to be shown for LOCATION");     
+            permBean.put(Permission.ACCESS_COARSE_LOCATION, "Your rationale message to be shown for LOCATION");
+            
+            permBean.put(Permission.WRITE_EXTERNAL_STORAGE, "Your rationale message to be shown for WRITE_EXTERNAL_STORAGE");
+    
+            // prepare permission request.
+            if (RequestPermission.isPermissionRequired(this, permBean)) {
+                RequestPermission
+                        .on(this)
+                        .with(permBean)
+                        .debug(false)       // optional
+                        .request();
+            } else {
+                // call your granted methods.
+            }
+        }
+    }
