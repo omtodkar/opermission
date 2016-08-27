@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
 import co.omkar.utility.opermission.RequestPermission;
@@ -61,8 +62,12 @@ public class Example extends AppCompatActivity implements ExampleView {
         permBean.put(Permission.WRITE_EXTERNAL_STORAGE, "To store some of your important data related application we required permission to access your External Storage.");
 
         // prepare permission request.
-        if (RequestPermission.isPermissionRequired(this, permBean)) {
+        try {
             RequestPermission.on(this).with(permBean).setResultTarget(mPresenter).request();
+        } catch (InvocationTargetException e) {
+            Log.e(TAG, "onCreate: Requesting permission", e);
+        } catch (IllegalAccessException e) {
+            Log.e(TAG, "onCreate: Requesting permission", e);
         }
     }
 

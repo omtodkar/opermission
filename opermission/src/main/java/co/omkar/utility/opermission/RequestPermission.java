@@ -1,3 +1,19 @@
+/*
+    Copyright (C) 2016 Omkar Todkar
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+
 package co.omkar.utility.opermission;
 
 import android.content.Context;
@@ -157,7 +173,7 @@ public final class RequestPermission {
      * are already granted or required to grant.</p>
      * <p>Only if only API is greater than 23 (i.e. Marshmallows or later).</p>
      */
-    public void request() {
+    public void request() throws InvocationTargetException, IllegalAccessException {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
             // if result target is not set use activity as default.
@@ -167,19 +183,28 @@ public final class RequestPermission {
 
             PermBean bean = new PermBean();
             Map<Permission, String> map = permBean.getPermissions();
+            HashMap<Permission, Result> resultMap = new HashMap<>(permBean.size());
             for (Map.Entry<Permission, String> m : map.entrySet()) {
                 if (mActivity.checkSelfPermission(m.getKey().toString()) != PackageManager.PERMISSION_GRANTED) {
                     bean.put(m.getKey(), m.getValue());
+                } else {
+                    resultMap.put(m.getKey(), Result.GRANTED);
                 }
-                // TODO: 19/08/16 if already granted invoke annotated respective methods.
             }
 
             // pass everything to dialog fragment.
             if (bean.size() > 0) {
                 showDialog(bean);
             } else {
+                invokeAnnotatedMethods(resultMap);
                 mLog.i(TAG, "request: Redundant");
             }
+        } else {
+            HashMap<Permission, Result> resultMap = new HashMap<>(permBean.size());
+            for (Map.Entry<Permission, String> m : permBean.getPermissions().entrySet()) {
+                resultMap.put(m.getKey(), Result.GRANTED);
+            }
+            invokeAnnotatedMethods(resultMap);
         }
         // TODO: 19/08/16 invoke all methods considering permissions are granted.
     }
@@ -206,6 +231,7 @@ public final class RequestPermission {
         }
         return false;
     }
+
 
     /**
      * Show dialog fragment to show dialogs before asking permission.
