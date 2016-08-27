@@ -10,10 +10,10 @@ ext {
 
     libraryDescription = 'Android utility library to ease in asking run-time permission for API over 23 i.e. Marshmallows.'
 
-    siteUrl = 'https://github.com/omtodkar/opermissions'
-    gitUrl = 'https://github.com/omtodkar/opermissions.git'
+    siteUrl = 'https://github.com/omtodkar/opermission'
+    gitUrl = 'https://github.com/omtodkar/opermission.git'
 
-    libraryVersion = '0.0.3'
+    libraryVersion = '0.0.4'
 
     developerId = 'omtodkar'
     developerName = 'Omkar Todkar'
@@ -32,7 +32,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 24
         versionCode 1
-        versionName "0.0.3"
+        versionName "0.0.4"
     }
     buildTypes {
         release {
