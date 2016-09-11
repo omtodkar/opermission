@@ -25,7 +25,7 @@ import co.omkar.utility.opermission.bean.Permission;
 
 /**
  * Created by Omya on 12/08/16.
- * <p>
+ * <p/>
  * Use this annotation on method to react on denial
  * of any permission you request.
  */
@@ -42,7 +42,7 @@ public @interface DeniedPermission {
     /**
      * Array of {@link android.Manifest.permission} or {@link android.Manifest.permission_group}
      * which is requested through RequestPermission. Default NULL.
-     * <p>
+     * <p/>
      * Use it if some method depend on two or more permissions grant.
      */
     String[] permissions() default {};
@@ -51,7 +51,7 @@ public @interface DeniedPermission {
      * {@link Permission} value.
      * default NULL
      */
-    Permission value() default Permission.NULL;
+    Permission value() default Permission.NONE;
 
     /**
      * Array of {@link Permission}.

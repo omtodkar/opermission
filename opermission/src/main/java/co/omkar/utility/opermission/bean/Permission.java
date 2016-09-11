@@ -28,7 +28,7 @@ import java.util.Map;
  */
 public enum Permission {
 
-    NULL(null),
+    NONE(null),
 
     // location
     ACCESS_COARSE_LOCATION("android.permission.ACCESS_COARSE_LOCATION"),

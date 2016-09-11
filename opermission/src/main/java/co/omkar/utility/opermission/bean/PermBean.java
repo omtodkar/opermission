@@ -18,7 +18,7 @@ package co.omkar.utility.opermission.bean;
 
 import android.support.annotation.NonNull;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -39,21 +39,32 @@ public class PermBean {
 
     /**
      * Create a permission bean for single permission without message to show.
-     * Note: Only default message will be shown on launch.
+     * Note: Only default message will be shown on permission request.
      *
      * @param permission {@link android.Manifest.permission} to be asked.
      */
     public PermBean(@NonNull String permission) {
-        this.mPermissions = new HashMap<>(1);
+        mPermissions = new LinkedHashMap<>();
         mPermissions.put(Permission.get(permission), null);
     }
 
     /**
-     * Set a permission and messages map.
+     * Create a permission bean for single permission without message to show.
+     * Note: Only default message will be shown on permission request.
+     *
+     * @param permission {@link Permission} to be asked.
+     */
+    public PermBean(@NonNull Permission permission) {
+        mPermissions = new LinkedHashMap<>(1);
+        mPermissions.put(permission, null);
+    }
+
+    /**
+     * Map of permission and rationale messages.
      *
      * @param mPermissions A prepared Map&lt;Permission, String&gt; to be asked.
      */
-    public PermBean(Map<Permission, String> mPermissions) {
+    public PermBean(@NonNull Map<Permission, String> mPermissions) {
         this.mPermissions = mPermissions;
     }
 
@@ -61,7 +72,18 @@ public class PermBean {
      * Initialize empty permission map and add permission later.
      */
     public PermBean() {
-        mPermissions = new HashMap<>();
+        mPermissions = new LinkedHashMap<>();
+    }
+
+    /**
+     * Easy access method for single permission without rationale message.
+     *
+     * @param permission {@link Permission} to be asked.
+     * @return  Object of {@link PermBean}
+     */
+    public static PermBean create(Permission permission) {
+        if (permission == null) throw new NullPointerException("Permission can't be null");
+        return new PermBean(permission);
     }
 
     /**
@@ -70,13 +92,14 @@ public class PermBean {
      * @param permission {@link Permission} to be asked.
      * @param message    String rationale message.
      */
-    public void put(Permission permission, String message) {
+    public PermBean put(Permission permission, String message) {
         if (permission == null) throw new IllegalArgumentException("Permission can't be null");
         mPermissions.put(permission, message);
+        return this;
     }
 
     /**
-     * Permission to be removed from map.
+     * In case want to remove permissions on runtime from map.
      *
      * @param permission {@link Permission} to be removed.
      */

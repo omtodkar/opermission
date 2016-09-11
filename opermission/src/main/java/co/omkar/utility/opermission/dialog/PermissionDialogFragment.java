@@ -35,13 +35,13 @@ import android.widget.TextView;
 
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import co.omkar.utility.opermission.R;
 import co.omkar.utility.opermission.RequestPermission;
 import co.omkar.utility.opermission.bean.PermBean;
 import co.omkar.utility.opermission.bean.Permission;
-import co.omkar.utility.opermission.utility.mLog;
 
 import static android.view.View.OnClickListener;
 
@@ -54,10 +54,9 @@ import static android.view.View.OnClickListener;
  * @author Omkar Todkar
  */
 public class PermissionDialogFragment extends DialogFragment implements OnClickListener, OnPageChangeListener {
-    private static final String TAG = "RequestPermission";
-
     private static final String PERMISSION = "permission";
     private static final String REQUEST = "request";
+    private static final String DEFAULT_MESSAGE = "Please allow permissions to enjoy all features of application.";
 
     LinearLayout dialogView;
 
@@ -70,8 +69,6 @@ public class PermissionDialogFragment extends DialogFragment implements OnClickL
     ImageButton previous;
 
     PagerAdapter adapter;
-
-    private HashMap<Permission, String> mBean;
 
     private String[] messages;
     private String[] permissions;
@@ -113,24 +110,25 @@ public class PermissionDialogFragment extends DialogFragment implements OnClickL
         Bundle extras = getArguments();
         if (extras != null) {
             //noinspection unchecked
-            mBean = (HashMap<Permission, String>) extras.getSerializable(PERMISSION);
+            HashMap<Permission, String> mBean = (HashMap<Permission, String>)
+                    extras.getSerializable(PERMISSION);
 
-            if (mBean != null && !mBean.isEmpty()) {
-                /* To avoid duplicity of provided messages. */
+            if (mBean != null && !mBean.isEmpty() &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+                /* To avoid duplicity and maintain order. */
                 Set<String> msgs = new LinkedHashSet<String>();
-                msgs.addAll(mBean.values());
-                messages = msgs.toArray(new String[msgs.size()]);
-
-                /* extract permissions value from enum */
                 Set<String> perm = new LinkedHashSet<String>();
-                for (Permission p : mBean.keySet()) {
-                    perm.add(p.toString());
+
+                for (Map.Entry<Permission, String> bean : mBean.entrySet()) {
+                    msgs.add(bean.getValue());
+                    perm.add(bean.getKey().toString());
                 }
+                messages = msgs.toArray(new String[msgs.size()]);
                 permissions = perm.toArray(new String[perm.size()]);
             }
             requestCode = extras.getInt(REQUEST);
             size = messages.length;
-            mLog.i(TAG, "Dialog: rationale message size is " + size);
         }
     }
 
@@ -157,7 +155,7 @@ public class PermissionDialogFragment extends DialogFragment implements OnClickL
                 counter.setTextColor(Color.parseColor("#018c7a"));
 
                 if (messages[0] == null) {
-                    messages[0] = "Please allow permissions to enjoy all features of application.";
+                    messages[0] = DEFAULT_MESSAGE;
                 }
             } else {
                 String count = 1 + "/" + size;
@@ -169,7 +167,7 @@ public class PermissionDialogFragment extends DialogFragment implements OnClickL
 
             size = 1;
             messages = new String[size];
-            messages[0] = "Please allow permissions to enjoy all features of application.";
+            messages[0] = DEFAULT_MESSAGE;
 
             counter.setText(getString(R.string.ok));
             counter.setTextColor(Color.parseColor("#018c7a"));

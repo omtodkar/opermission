@@ -12,7 +12,7 @@ import co.omkar.utility.opermission.RequestPermission;
 /**
  * Created by Omya on 12/08/16.
  */
-public class ExampleTest extends AppCompatActivity {
+public class MVPExampleTest extends AppCompatActivity {
 
     @Test
     public void testOnCreate() throws Exception {

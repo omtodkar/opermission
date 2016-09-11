@@ -14,18 +14,18 @@
         android:drawableLeft="@drawable/ic_security"
         android:drawablePadding="16dp"
         android:drawableStart="@drawable/ic_security"
-        android:padding="16dp"
+        android:padding="8dp"
         android:text="@string/permission_title"
         tools:text="@string/permission_title" />
 
     <android.support.v4.view.ViewPager
         android:id="@+id/view_pager"
         android:layout_width="match_parent"
-        android:layout_height="125dp" />
+        android:layout_height="120dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
         android:layout_gravity="end"
         android:orientation="horizontal"
         android:weightSum="3">
@@ -55,8 +55,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:padding="16dp"
-            android:textColor="@color/default_text"
+            android:padding="5dp"
             tools:text="9/11" />
     </LinearLayout>
 </LinearLayout>

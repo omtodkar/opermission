@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">oPermission</string>
+    <string name="app_name" translatable="false">oPermission</string>
+    <string name="next">Next</string>
 </resources>

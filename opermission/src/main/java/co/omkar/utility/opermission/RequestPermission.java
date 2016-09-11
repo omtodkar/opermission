@@ -16,31 +16,34 @@
 
 package co.omkar.utility.opermission;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import co.omkar.utility.opermission.annotation.DeniedPermission;
 import co.omkar.utility.opermission.annotation.GrantedPermission;
+import co.omkar.utility.opermission.annotation.OPermission;
 import co.omkar.utility.opermission.bean.PermBean;
 import co.omkar.utility.opermission.bean.Permission;
 import co.omkar.utility.opermission.bean.Result;
 import co.omkar.utility.opermission.dialog.PermissionDialogFragment;
-import co.omkar.utility.opermission.utility.mLog;
 
 /**
  * <p>Request permission is builder class to
@@ -86,6 +89,11 @@ public final class RequestPermission {
     private static PermBean permBean;
 
     /**
+     * A pair of permissions and its results to invoke respective methods.
+     */
+    private static HashMap<Permission, Result> resultMap;
+
+    /**
      * A permission request code.
      */
     private static int requestCode = 16989;
@@ -98,7 +106,6 @@ public final class RequestPermission {
      */
     private RequestPermission(FragmentActivity mActivity) {
         RequestPermission.mActivity = mActivity;
-        debug(true);
     }
 
     /**
@@ -147,11 +154,10 @@ public final class RequestPermission {
     /**
      * Turn off oPermission logs while requesting permissions.
      *
-     * @param mode boolean value.
      * @return modified instance of RequestPermission with debug ON/OFF.
      */
-    public RequestPermission debug(boolean mode) {
-        mLog.setDebugMode(mode);
+    public RequestPermission debug() {
+        mLog.setDebugMode(true);
         return this;
     }
 
@@ -173,59 +179,65 @@ public final class RequestPermission {
      * are already granted or required to grant.</p>
      * <p>Only if only API is greater than 23 (i.e. Marshmallows or later).</p>
      */
-    public void request() throws InvocationTargetException, IllegalAccessException {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+    public void request() {
+        mLog.i(TAG, "Requesting.........");
+        resultMap = new LinkedHashMap<>(permBean.size());
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && isPermissionRequired(permBean)) {
 
             // if result target is not set use activity as default.
             if (RequestPermission.mBase == null) {
                 RequestPermission.mBase = mActivity;
             }
+            mLog.i(TAG, "On permission result " + mBase.getClass().getSimpleName()
+                    + " class methods will be executed.");
 
             PermBean bean = new PermBean();
             Map<Permission, String> map = permBean.getPermissions();
-            HashMap<Permission, Result> resultMap = new HashMap<>(permBean.size());
             for (Map.Entry<Permission, String> m : map.entrySet()) {
                 if (mActivity.checkSelfPermission(m.getKey().toString()) != PackageManager.PERMISSION_GRANTED) {
                     bean.put(m.getKey(), m.getValue());
+                    mLog.i(TAG, m.getKey().name() + " requires permission");
                 } else {
                     resultMap.put(m.getKey(), Result.GRANTED);
                 }
             }
 
-            // pass everything to dialog fragment.
+            // ask permissions for granted methods.
             if (bean.size() > 0) {
                 showDialog(bean);
-            } else {
-                invokeAnnotatedMethods(resultMap);
-                mLog.i(TAG, "request: Redundant");
             }
         } else {
-            HashMap<Permission, Result> resultMap = new HashMap<>(permBean.size());
             for (Map.Entry<Permission, String> m : permBean.getPermissions().entrySet()) {
                 resultMap.put(m.getKey(), Result.GRANTED);
             }
-            invokeAnnotatedMethods(resultMap);
+            try {
+                invokeAnnotatedMethods(resultMap);
+            } catch (InvocationTargetException e) {
+                mLog.e(TAG, e.getMessage(), e);
+            } catch (IllegalAccessException e) {
+                mLog.e(TAG, e.getMessage(), e);
+            }
+            mLog.i(TAG, "request: Redundant");
         }
-        // TODO: 19/08/16 invoke all methods considering permissions are granted.
     }
 
     /**
      * <p>Check weather single or multiple permissions requires grant.</p>
      * Use instead {@link RequestPermission#request()} directly.
      *
-     * @param mContext Android Application Context.
      * @param permBean {@link PermBean} wrapper class.
      * @return boolean value if any one of permission requires to be asked.
      */
-    @Deprecated
-    public static boolean isPermissionRequired(@NonNull Context mContext, @NonNull PermBean permBean) {
+    private static boolean isPermissionRequired(PermBean permBean) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return false;
         }
         if (permBean.size() > 0) {
             Map<Permission, String> map = permBean.getPermissions();
             for (Permission permission : map.keySet()) {
-                int status = mContext.checkSelfPermission(permission.toString());
+                int status = mActivity.checkSelfPermission(permission.toString());
                 if (status != PackageManager.PERMISSION_GRANTED) return true;
             }
         }
@@ -256,14 +268,12 @@ public final class RequestPermission {
         if (RequestPermission.requestCode == requestCode) {
             /* Sort granted and denied permissions in array list */
             int count = permissions.length;
-            HashMap<Permission, Result> resultMap = new HashMap<>(count);
 
             List<String> granted = new ArrayList<>(count);
             List<String> denied = new ArrayList<>(count);
 
             for (int k = 0; k < count; k++) {
                 resultMap.put(Permission.get(permissions[k]), Result.get(grantResults[k]));
-
                 if (grantResults[k] == PackageManager.PERMISSION_GRANTED) {
                     granted.add(permissions[k]);
 
@@ -280,9 +290,9 @@ public final class RequestPermission {
             try {
                 invokeAnnotatedMethods(resultMap);
             } catch (IllegalAccessException e) {
-                mLog.e(TAG, "invokeGrantMethods: invoke method mechanism failed", e);
+                mLog.e(TAG, e.getMessage(), e);
             } catch (InvocationTargetException e) {
-                mLog.e(TAG, "invokeGrantMethods: invoke method mechanism failed", e);
+                mLog.e(TAG, e.getMessage(), e);
             }
 
             /* Send local broadcast on permissions result. */
@@ -294,7 +304,7 @@ public final class RequestPermission {
     }
 
     /**
-     * Invoke annotated methods in provided activity.
+     * Invoke annotated methods in provided class.
      *
      * @param resultMap prepared Map of Permissions and respective results.
      * @throws InvocationTargetException
@@ -302,7 +312,7 @@ public final class RequestPermission {
      */
     private static void invokeAnnotatedMethods(HashMap<Permission, Result> resultMap)
             throws InvocationTargetException, IllegalAccessException {
-        Method[] methods = getBase().getClass().getMethods();
+        Method[] methods = getBase().getClass().getDeclaredMethods();
 
         // check all methods from provided class or by default provided activity.
         for (Method method : methods) {
@@ -313,29 +323,25 @@ public final class RequestPermission {
                 if (granted != null) {
 
                     /* Check single value annotations */
-                    for (Map.Entry<Permission, Result> permResult : resultMap.entrySet()) {
+                    if (!granted.permission().equals("") || granted.value() != Permission.NONE) {
+                        for (Map.Entry<Permission, Result> permResult : resultMap.entrySet()) {
 
-                        // invoke method if String permission is annotated.
-                        if (granted.permission().equals(permResult.getKey().toString())
-                                && Result.GRANTED == permResult.getValue()) {
-                            method.invoke(getBase());
-                            mLog.i(TAG, "invoking string annotated grant method: " + method.getName());
-                            continue;
+                            // invoke method if String permission is annotated.
+                            if ((granted.permission().equals(permResult.getKey().toString()) ||
+                                    granted.value() == permResult.getKey())
+                                    && Result.GRANTED == permResult.getValue()) {
+                                method.invoke(getBase());
+                                mLog.i(TAG, "invoking grant method: " + method.getName());
+                            }
                         }
-
-                        // invoke method if Permission enum is annotated.
-                        if (granted.value() == permResult.getKey()
-                                && Result.GRANTED == permResult.getValue()) {
-                            method.invoke(getBase());
-                            mLog.i(TAG, "invoking enum annotated grant method: " + method.getName());
-                        }
+                        continue;
                     }
 
                     /* Check array fields in annotations */
-
                     if (granted.values().length > 0) {
                         if (allValuesGranted(granted.values(), resultMap)) {
                             method.invoke(getBase());
+                            mLog.i(TAG, "invoking grant method: " + method.getName());
                         }
                         continue;
                     }
@@ -343,6 +349,7 @@ public final class RequestPermission {
                     if (granted.permissions().length > 0) {
                         if (allValuesGranted(granted.permissions(), resultMap)) {
                             method.invoke(getBase());
+                            mLog.i(TAG, "invoking grant method: " + method.getName());
                         }
                     }
                 }
@@ -352,39 +359,89 @@ public final class RequestPermission {
                 if (denied != null) {
 
                     /* Check single value annotations */
+                    if (!denied.permission().equals("") || denied.value() != Permission.NONE) {
+                        for (Map.Entry<Permission, Result> permResult : resultMap.entrySet()) {
 
-                    for (Map.Entry<Permission, Result> permResult : resultMap.entrySet()) {
-
-                        // invoke method if String permission is annotated.
-                        if (denied.permission().equals(permResult.getKey().toString())
-                                && Result.DENIED == permResult.getValue()) {
-                            method.invoke(getBase());
-                            mLog.i(TAG, "invoking string annotated denied method: " + method.getName());
-                            continue;
+                            // invoke method if String permission is annotated.
+                            if ((denied.permission().equals(permResult.getKey().toString())
+                                    || denied.value() == permResult.getKey())
+                                    && Result.DENIED == permResult.getValue()) {
+                                method.invoke(getBase());
+                                mLog.i(TAG, "invoking denied method: " + method.getName());
+                            }
                         }
-
-                        // invoke method if Permission enum is annotated.
-                        if (denied.value() == permResult.getKey()
-                                && Result.DENIED == permResult.getValue()) {
-                            method.invoke(getBase());
-                            mLog.i(TAG, "invoking enum annotated denied method: " + method.getName());
-                        }
+                        continue;
                     }
 
                     /* Check array fields in annotations */
-
                     if (denied.values().length > 0) {
                         if (anyValueDenied(denied.values(), resultMap)) {
                             method.invoke(getBase());
-                            mLog.i(TAG, "invoking string annotated denied method: " + method.getName());
+                            mLog.i(TAG, "invoking denied method: " + method.getName());
                         }
                         continue;
                     }
 
                     if (denied.permissions().length > 0) {
                         if (anyValueDenied(denied.permissions(), resultMap)) {
-                            mLog.i(TAG, "invoking enum annotated denied method: " + method.getName());
+                            mLog.i(TAG, "invoking denied method: " + method.getName());
                             method.invoke(getBase());
+                        }
+                    }
+                }
+            } else if (method != null && method.isAnnotationPresent(OPermission.class)) {
+                OPermission oPermission = method.getAnnotation(OPermission.class);
+                final Annotation[][] paramAnnotations = method.getParameterAnnotations();
+                final Class[] paramTypes = method.getParameterTypes();
+
+                if (oPermission != null
+                        && paramAnnotations[0][0] instanceof co.omkar.utility.opermission.annotation.Result
+                        && (paramTypes[0] == boolean.class
+                        || paramTypes[0] == Boolean.class)) {
+
+                    /* Check single value annotations */
+                    for (Map.Entry<Permission, Result> permResult : resultMap.entrySet()) {
+
+                        // invoke method if String permission is annotated.
+                        if (oPermission.permission().equals(permResult.getKey().toString())
+                                || oPermission.value().equals(permResult.getKey())) {
+
+                            switch (permResult.getValue()) {
+
+                                // Permission is granted.
+                                case GRANTED:
+                                    method.invoke(getBase(), true);
+                                    mLog.i(TAG, "invoking method: " + method.getName());
+                                    break;
+
+                                // Permission is denied.
+                                case DENIED:
+                                    method.invoke(getBase(), false);
+                                    mLog.i(TAG, "invoking method: " + method.getName());
+                                    break;
+                            }
+                        }
+                    }
+
+                        /* Check array fields in annotations */
+                    if (oPermission.values().length > 0) {
+                        if (allValuesGranted(oPermission.values(), resultMap)) {
+                            method.invoke(getBase(), true);
+                            mLog.i(TAG, "invoking as granted method: " + method.getName());
+                        } else {
+                            method.invoke(getBase(), false);
+                            mLog.i(TAG, "invoking as denied method: " + method.getName());
+                        }
+                        continue;
+                    }
+
+                    if (oPermission.permissions().length > 0) {
+                        if (allValuesGranted(oPermission.permissions(), resultMap)) {
+                            method.invoke(getBase(), true);
+                            mLog.i(TAG, "invoking as granted method: " + method.getName());
+                        } else {
+                            method.invoke(getBase(), false);
+                            mLog.i(TAG, "invoking as denied method: " + method.getName());
                         }
                     }
                 }
@@ -401,62 +458,32 @@ public final class RequestPermission {
      * @param resultMap Permission and respective result map.
      * @return false if any of above condition fails.
      */
-    private static boolean allValuesGranted(Permission[] values, HashMap<Permission, Result> resultMap) {
-        Set<Permission> valueSet = new HashSet<>(Arrays.asList(values));
-        if (resultMap.keySet().containsAll(valueSet)) {
-            for (Permission value : values) {
-                if (Result.GRANTED != resultMap.get(value)) {
-                    mLog.i(TAG, "allValuesGranted: value denied - " + value.toString());
-                    return false;
+    private static boolean allValuesGranted(Object[] values, HashMap<Permission, Result> resultMap) {
+        if (values instanceof Permission[]) {
+            Set<Permission> valueSet = new HashSet<>(Arrays.asList((Permission[]) values));
+            if (resultMap.keySet().containsAll(valueSet)) {
+                for (Object value : values) {
+                    if (Result.GRANTED != resultMap.get((Permission) value)) {
+                        mLog.i(TAG, "denied - " + value.toString());
+                        return false;
+                    }
                 }
+                return true;
             }
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Check if annotated result permissions contains all values from annotated array.
-     * Then it also check if all permissions in annotated method value array are granted.
-     *
-     * @param strings   Annotated value ({@link android.Manifest.permission}) array.
-     * @param resultMap Permission and respective result map.
-     * @return false if any of above condition fails.
-     */
-    private static boolean allValuesGranted(String[] strings, HashMap<Permission, Result> resultMap) {
-        Set<String> valueSet = new HashSet<>(Arrays.asList(strings));
-        Set<String> permission = new HashSet<>();
-        for (Permission perm : resultMap.keySet()) {
-            permission.add(perm.toString());
-        }
-        if (permission.containsAll(valueSet)) {
-            for (String value : strings) {
-                if (Result.GRANTED != resultMap.get(Permission.get(value))) {
-                    mLog.i(TAG, "allValuesGranted: value denied - " + value);
-                    return false;
-                }
+        } else if (values instanceof String[]) {
+            Set<String> valueSet = new HashSet<>(Arrays.asList((String[]) values));
+            Set<String> permission = new HashSet<>();
+            for (Permission perm : resultMap.keySet()) {
+                permission.add(perm.toString());
             }
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Check if annotated result permissions contains all values from annotated array.
-     * Then it also check if any permission in annotated method value array is denied.
-     *
-     * @param values    Annotated value ({@link Permission}) array.
-     * @param resultMap Permission and respective result map.
-     * @return false if first statement is not satisfied else true if both are satisfied.
-     */
-    private static boolean anyValueDenied(Permission[] values, HashMap<Permission, Result> resultMap) {
-        Set<Permission> valueSet = new HashSet<>(Arrays.asList(values));
-        if (resultMap.keySet().containsAll(valueSet)) {
-            for (Permission value : values) {
-                if (Result.DENIED == resultMap.get(value)) {
-                    mLog.i(TAG, "anyValueDenied: value denied - " + value.toString());
-                    return true;
+            if (permission.containsAll(valueSet)) {
+                for (Object value : values) {
+                    if (Result.GRANTED != resultMap.get(Permission.get(String.valueOf(value)))) {
+                        mLog.i(TAG, "denied - " + value);
+                        return false;
+                    }
                 }
+                return true;
             }
         }
         return false;
@@ -466,21 +493,33 @@ public final class RequestPermission {
      * Check if annotated result permissions contains all values from annotated array.
      * Then it also check if any permission in annotated method value array is denied.
      *
-     * @param strings   Annotated value ({@link android.Manifest.permission}) array.
+     * @param values    ({@link Permission} or {@link String}) array.
      * @param resultMap Permission and respective result map.
      * @return false if first statement is not satisfied else true if both are satisfied.
      */
-    private static boolean anyValueDenied(String[] strings, HashMap<Permission, Result> resultMap) {
-        Set<String> valueSet = new HashSet<>(Arrays.asList(strings));
-        Set<String> permissionSet = new HashSet<>();
-        for (Permission perm : resultMap.keySet()) {
-            permissionSet.add(perm.toString());
-        }
-        if (permissionSet.containsAll(valueSet)) {
-            for (String value : strings) {
-                if (Result.DENIED == resultMap.get(Permission.get(value))) {
-                    mLog.i(TAG, "anyValueDenied: value denied - " + value);
-                    return true;
+    private static boolean anyValueDenied(Object[] values, HashMap<Permission, Result> resultMap) {
+        if (values instanceof Permission[]) {
+            Set<Permission> valueSet = new LinkedHashSet<>(Arrays.asList((Permission[]) values));
+            if (resultMap.keySet().containsAll(valueSet)) {
+                for (Object value : values) {
+                    if (Result.DENIED == resultMap.get((Permission) value)) {
+                        mLog.i(TAG, "denied - " + value.toString());
+                        return true;
+                    }
+                }
+            }
+        } else if (values instanceof String[]) {
+            Set<String> valueSet = new HashSet<>(Arrays.asList((String[]) values));
+            Set<String> permissionSet = new HashSet<>();
+            for (Permission perm : resultMap.keySet()) {
+                permissionSet.add(perm.toString());
+            }
+            if (permissionSet.containsAll(valueSet)) {
+                for (Object value : values) {
+                    if (Result.DENIED == resultMap.get(Permission.get((String) value))) {
+                        mLog.i(TAG, "denied - " + value);
+                        return true;
+                    }
                 }
             }
         }
@@ -489,5 +528,88 @@ public final class RequestPermission {
 
     private static Object getBase() {
         return RequestPermission.mBase;
+    }
+
+    /**
+     * <p>Controller logger.</p>
+     * Created on 19/08/16.
+     *
+     * @author Omkar Todkar.
+     */
+    private static final class mLog {
+
+        private static boolean mode;
+
+        private static boolean isMode() {
+            return mode;
+        }
+
+        public static void setDebugMode(boolean mode) {
+            mLog.mode = mode;
+        }
+
+        public static int v(String tag, String msg) {
+            return isMode() ? Log.v(tag, msg) : -1;
+        }
+
+        public static int v(String tag, String msg, Throwable tr) {
+            return isMode() ? Log.v(tag, msg, tr) : -1;
+        }
+
+        public static int d(String tag, String msg) {
+            return isMode() ? Log.d(tag, msg) : -1;
+        }
+
+        public static int d(String tag, String msg, Throwable tr) {
+            return isMode() ? Log.d(tag, msg, tr) : -1;
+        }
+
+        public static int i(String tag, String msg) {
+            return isMode() ? Log.i(tag, msg) : -1;
+        }
+
+        public static int i(String tag, String msg, Throwable tr) {
+            return isMode() ? Log.i(tag, msg, tr) : -1;
+        }
+
+        public static int w(String tag, String msg) {
+            return isMode() ? Log.w(tag, msg) : -1;
+        }
+
+        public static int w(String tag, String msg, Throwable tr) {
+            return isMode() ? Log.w(tag, msg, tr) : -1;
+        }
+
+        public static int w(String tag, Throwable tr) {
+            return isMode() ? Log.w(tag, tr) : -1;
+        }
+
+        public static int e(String tag, String msg) {
+            return isMode() ? Log.e(tag, msg) : -1;
+        }
+
+        public static int e(String tag, String msg, Throwable tr) {
+            return isMode() ? Log.e(tag, msg, tr) : -1;
+        }
+
+        public static int wtf(String tag, String msg) {
+            return isMode() ? Log.e(tag, msg) : -1;
+        }
+
+        public static int wtf(String tag, Throwable tr) {
+            return isMode() ? Log.wtf(tag, tr) : -1;
+        }
+
+        public static int wtf(String tag, String msg, Throwable tr) {
+            return isMode() ? Log.wtf(tag, msg, tr) : -1;
+        }
+
+        public static String getStackTraceString(Throwable tr) {
+            return isMode() ? Log.getStackTraceString(tr) : null;
+        }
+
+        public static int println(int priority, String tag, String msg) {
+            return isMode() ? Log.println(priority, tag, msg) : -1;
+        }
     }
 }

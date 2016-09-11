@@ -5,5 +5,5 @@ package co.omkar.utility;
  */
 public interface ExampleView {
 
-    void UpdateView(String data);
+    void updateView(String data);
 }
