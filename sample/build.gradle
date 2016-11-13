@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion "24.0.2"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.0"
 
     defaultConfig {
         applicationId "co.omkar.utility.opermission"
         minSdkVersion 15
-        targetSdkVersion 24
+        targetSdkVersion 25
         versionCode 1
         versionName "0.0.5"
     }
@@ -24,5 +24,5 @@ dependencies {
     compile project(path: ':opermission')
     testCompile 'junit:junit:4.12'
     androidTestCompile 'org.testng:testng:6.9.6'
-    compile 'com.android.support:appcompat-v7:24.2.0'
+    compile 'com.android.support:appcompat-v7:25.0.0'
 }

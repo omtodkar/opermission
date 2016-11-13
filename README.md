@@ -1,4 +1,4 @@
-#oPermission [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+#oPermission [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![](https://img.shields.io/badge/Methods and size-106 | 12 KB-e91e63.svg)](http://www.methodscount.com/?lib=co.omkar.utility%3Aopermission%3A0.0.5)
 
 **oPermission** is android library to reduce the developer's efforts implementing android run-time permissions boilerplate. It is very simple to implement. With **oPermissions** it is not necessary to check for API or Build version requesting permissions. oPermissions have an **AutoExecute** mode, if application is running on API < 23 **oPermission** will automatically execute respective `@GrantedPermission` or `OPermission` with `true` annotated method(s). Library also supports MVP, MVVM, MVC, etc. architectural patterns.
 
