@@ -1,10 +1,11 @@
-#oPermission [![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) [![](https://img.shields.io/badge/Methods and size-106 | 12 KB-e91e63.svg)](http://www.methodscount.com/?lib=co.omkar.utility%3Aopermission%3A0.0.5)
+# oPermission
+[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0) <a href="http://www.methodscount.com/?lib=co.omkar.utility%3Aopermission%3A0.0.5"><img src="https://img.shields.io/badge/Methods count-core: 212 | deps: 16982-e91e63.svg"/></a>
 
 **oPermission** is android library to reduce the developer's efforts implementing android run-time permissions boilerplate. It is very simple to implement. With **oPermissions** it is not necessary to check for API or Build version requesting permissions. oPermissions have an **AutoExecute** mode, if application is running on API < 23 **oPermission** will automatically execute respective `@GrantedPermission` or `OPermission` with `true` annotated method(s). Library also supports MVP, MVVM, MVC, etc. architectural patterns.
 
 ---
 
-##Usage
+## Usage
 
 Single line code for request.
 
@@ -29,19 +30,20 @@ If your application is running on API lower than Marshmallows, result method wor
     
 ---
     
-##How to get it? [![Download](https://api.bintray.com/packages/omtodkar/maven/opermission/images/download.svg) ](https://bintray.com/omtodkar/maven/opermission/_latestVersion)
+## How to get it? 
+[![Download](https://api.bintray.com/packages/omtodkar/maven/opermission/images/download.svg) ](https://bintray.com/omtodkar/maven/opermission/_latestVersion)
 
 Just append following code in your `app` module's gradle file.
 
 ```groovy
 dependencies {
     //...
-    compile 'co.omkar.utility:opermission:0.0.5'
+    implementation "co.omkar.utility:opermission:$latest"
 }
 ```
  
-##License
-    Copyright (C) 2016 Omkar Todkar
+## License
+    Copyright (C) 2018 Omkar Todkar
     
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
