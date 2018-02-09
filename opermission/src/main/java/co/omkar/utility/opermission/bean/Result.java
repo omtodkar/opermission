@@ -16,6 +16,8 @@
 
 package co.omkar.utility.opermission.bean;
 
+import android.util.SparseArray;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,12 +37,12 @@ public enum Result {
         this.value = value;
     }
 
-    private static Map<Integer, Result> resultLookUp = new HashMap<>(2);
+    private static SparseArray<Result> resultLookup = new SparseArray<>(2);
 
     /* populate map */
     static {
         for (Result type : Result.values()) {
-            resultLookUp.put(type.value, type);
+            resultLookup.append(type.value, type);
         }
     }
 
@@ -48,6 +50,6 @@ public enum Result {
      * To find enum constant by its value.
      */
     public static Result get(int value) {
-        return resultLookUp.get(value);
+        return resultLookup.get(value);
     }
 }
